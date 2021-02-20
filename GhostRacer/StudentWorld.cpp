@@ -17,6 +17,7 @@ StudentWorld::StudentWorld(string assetPath)
 
 int StudentWorld::init()
 {
+    racer = new ghostRacer;
     return GWSTATUS_CONTINUE_GAME;
 }
 
@@ -24,10 +25,13 @@ int StudentWorld::move()
 {
     // This code is here merely to allow the game to build, run, and terminate after you hit enter.
     // Notice that the return value GWSTATUS_PLAYER_DIED will cause our framework to end the current level.
+    racer->doSomething();
+    return GWSTATUS_CONTINUE_GAME;
     decLives();
     return GWSTATUS_PLAYER_DIED;
 }
 
 void StudentWorld::cleanUp()
 {
+    delete racer;
 }
