@@ -8,7 +8,7 @@
 class actor :public GraphObject
 {
 public:
-	actor();
+	actor(int m_ID, double m_X, double m_Y, int m_dir, double m_size, int m_depth);
 
 private:
 };
@@ -26,11 +26,26 @@ private:
 class borderLines :public actor
 {
 public:
+	borderLines(int line_ID, double line_X, double line_Y);
+	~borderLines();
+private:
+};
+
+class whiteLines :borderLines
+{
+public:
+	
+private:
+};
+
+class yellowLines :borderLines
+{
+public:
+
+private:
 	borderLines();
 	~borderLines();
 private:
-	GraphObject* whiteLine;
-	GraphObject* yellowLine;
 };
 
 /*
@@ -38,45 +53,29 @@ class goodies :public actor
 {
 
 };
-
 class holyWater :public goodies
 {
-
 };
-
 class health :public goodies
 {
-
 };
-
 class humanPedestrian :public actor
 {
-
 };
-
 class zombiePedestrian :public actor
 {
-
 };
-
 class taxi :public actor
 {
-
 };
-
 class souls :public actor
 {
-
 };
-
 class cannon :public actor
 {
-
 };
-
 class oilSlicks :public actor
 {
-
 };
 */
 
