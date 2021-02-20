@@ -3,11 +3,10 @@
 
 // Students:  Add code to this file, Actor.h, StudentWorld.h, and StudentWorld.cpp
 
+
 actor::actor(int m_ID, double m_X, double m_Y, int m_dir, double m_size, int m_depth)
 	:GraphObject(m_ID, m_X, m_Y, m_dir, m_size, m_depth)
-{
 
-}
 
 ghostRacer::ghostRacer()
 	: actor(IID_GHOST_RACER, 128, 32, 90, 4.0, 0)

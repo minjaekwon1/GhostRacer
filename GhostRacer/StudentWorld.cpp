@@ -33,5 +33,4 @@ int StudentWorld::move()
 
 void StudentWorld::cleanUp()
 {
-    delete racer;
 }

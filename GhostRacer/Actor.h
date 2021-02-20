@@ -43,11 +43,15 @@ class yellowLines :borderLines
 public:
 
 private:
+	borderLines();
+	~borderLines();
+private:
 };
 
 /*
 class goodies :public actor
 {
+
 };
 class holyWater :public goodies
 {
