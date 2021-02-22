@@ -5,53 +5,69 @@
 
 // Students:  Add code to this file, Actor.cpp, StudentWorld.h, and StudentWorld.cpp
 
+class StudentWorld;
+
 class actor :public GraphObject
 {
 public:
-	actor(int m_ID, double m_X, double m_Y, int m_dir, double m_size, int m_depth);
+	actor(int m_ID, double m_X, double m_Y, int m_dir, double m_size, int m_depth,
+		bool alive, bool collision, int vspeed, int hspeed, StudentWorld* world);
+	bool getLivingStatus();
+	void setLivingStatus(bool dedOrAlive);
+	StudentWorld* getWorld();
+	virtual void doSomething();
+	virtual void movement();
+	int getVSpeed();
+	void setVSpeed(int v_s);
+	int getHSpeed();
+	void setHSpeed(int h_s);
 
 private:
+	bool if_alive;
+	bool has_collision;
+	int vert_speed;
+	int horiz_speed;
+	StudentWorld* m_world;
 };
 
 class ghostRacer :public actor
 {
 public:
-	ghostRacer();
-	~ghostRacer();
-	void doSomething();
+	ghostRacer(StudentWorld* world);
+	virtual void doSomething();
+	virtual void movement();
+
 private:
-	GraphObject* car;
+	int m_health;
+	int m_spray;
 };
 
 class borderLines :public actor
 {
 public:
-	borderLines(int line_ID, double line_X, double line_Y);
-	~borderLines();
+	borderLines(int line_ID, double line_X, double line_Y, StudentWorld* world, ghostRacer* racer);
+	virtual void doSomething();
+private:
+	ghostRacer* car;
+};
+
+class whiteLines :public borderLines
+{
+public:
+	whiteLines(double line_X, double line_Y, StudentWorld* world, ghostRacer* racer);
 private:
 };
 
-class whiteLines :borderLines
+class yellowLines :public borderLines
 {
 public:
-	
-private:
-};
-
-class yellowLines :borderLines
-{
-public:
-
-private:
-	borderLines();
-	~borderLines();
+	yellowLines(double line_X, double line_Y, StudentWorld* world, ghostRacer* racer);
 private:
 };
 
 /*
 class goodies :public actor
 {
-
 };
 class holyWater :public goodies
 {
