@@ -1,36 +1,98 @@
-#include "Actor.h"
-#include "StudentWorld.h"
+#ifndef ACTOR_H_
+#define ACTOR_H_
 
-// Students:  Add code to this file, Actor.h, StudentWorld.h, and StudentWorld.cpp
+#include "GraphObject.h"
 
+// Students:  Add code to this file, Actor.cpp, StudentWorld.h, and StudentWorld.cpp
 
-actor::actor(int m_ID, double m_X, double m_Y, int m_dir, double m_size, int m_depth)
-	:GraphObject(m_ID, m_X, m_Y, m_dir, m_size, m_depth)
+class StudentWorld;
 
-
-ghostRacer::ghostRacer()
-	: actor(IID_GHOST_RACER, 128, 32, 90, 4.0, 0)
+class actor :public GraphObject
 {
+public:
+	actor(int m_ID, double m_X, double m_Y, int m_dir, double m_size, int m_depth,
+		bool alive, bool collision, int vspeed, int hspeed, StudentWorld* world);
+	bool getLivingStatus();
+	void setLivingStatus(bool dedOrAlive);
+	StudentWorld* getWorld();
+	virtual void doSomething();
+	virtual void movement();
+	int getVSpeed();
+	void setVSpeed(int v_s);
+	int getHSpeed();
+	void setHSpeed(int h_s);
 
-}
+private:
+	bool if_alive;
+	bool has_collision;
+	int vert_speed;
+	int horiz_speed;
+	StudentWorld* m_world;
+};
 
-ghostRacer::~ghostRacer()
+class ghostRacer :public actor
 {
+public:
+	ghostRacer(StudentWorld* world);
+	virtual void doSomething();
+	virtual void movement();
 
-}
+private:
+	int m_health;
+	int m_spray;
+};
 
-void ghostRacer::doSomething()
+class borderLines :public actor
 {
+public:
+	borderLines(int line_ID, double line_X, double line_Y, StudentWorld* world, ghostRacer* racer);
+	virtual void doSomething();
+private:
+	ghostRacer* car;
+};
 
-}
-
-borderLines::borderLines(int line_ID, double line_X, double line_Y)
-	:actor(line_ID, line_X, line_Y, 0, 2.0, 2)
+class whiteLines :public borderLines
 {
+public:
+	whiteLines(double line_X, double line_Y, StudentWorld* world, ghostRacer* racer);
+private:
+};
 
-}
-
-borderLines::~borderLines()
+class yellowLines :public borderLines
 {
+public:
+	yellowLines(double line_X, double line_Y, StudentWorld* world, ghostRacer* racer);
+private:
+};
 
-}
+/*
+class goodies :public actor
+{
+};
+class holyWater :public goodies
+{
+};
+class health :public goodies
+{
+};
+class humanPedestrian :public actor
+{
+};
+class zombiePedestrian :public actor
+{
+};
+class taxi :public actor
+{
+};
+class souls :public actor
+{
+};
+class cannon :public actor
+{
+};
+class oilSlicks :public actor
+{
+};
+*/
+
+#endif // ACTOR_H_
