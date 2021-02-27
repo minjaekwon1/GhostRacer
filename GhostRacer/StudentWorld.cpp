@@ -3,6 +3,7 @@
 #include <iostream>
 #include <sstream>
 #include <string>
+#include <algorithm>
 using namespace std;
 
 GameWorld* createStudentWorld(string assetPath)
@@ -17,11 +18,17 @@ StudentWorld::StudentWorld(string assetPath)
 {
     racer = nullptr;
     lineTracker = -1;
+    level = 1;
 }
 
 StudentWorld::~StudentWorld()
 {
     cleanUp();
+}
+
+ghostRacer* StudentWorld::getGhostRacer()
+{
+    return racer;
 }
 
 int StudentWorld::init()
@@ -34,13 +41,13 @@ int StudentWorld::init()
     int RIGHT_EDGE = ROAD_CENTER + ROAD_WIDTH / 2;
     for (double j = 0; j < N; j++)
     {
-        actors.push_back(new yellowLines(LEFT_EDGE, j * SPRITE_HEIGHT, this, racer));
-        actors.push_back(new yellowLines(RIGHT_EDGE, j * SPRITE_HEIGHT, this, racer));
+        actors.push_back(new yellowLines(LEFT_EDGE, j * SPRITE_HEIGHT, this));
+        actors.push_back(new yellowLines(RIGHT_EDGE, j * SPRITE_HEIGHT, this));
     }
     for (double j = 0; j < M; j++)
     {
-        actors.push_back(new whiteLines(LEFT_EDGE + ROAD_WIDTH / 3.0, j * (4.0 * SPRITE_HEIGHT), this, racer));
-        actors.push_back(new whiteLines(RIGHT_EDGE - ROAD_WIDTH / 3.0, j * (4.0 * SPRITE_HEIGHT), this, racer));
+        actors.push_back(new whiteLines(LEFT_EDGE + ROAD_WIDTH / 3.0, j * (4.0 * SPRITE_HEIGHT), this));
+        actors.push_back(new whiteLines(RIGHT_EDGE - ROAD_WIDTH / 3.0, j * (4.0 * SPRITE_HEIGHT), this));
     }
     lineTracker = actors.back()->getY();
 
@@ -76,17 +83,36 @@ int StudentWorld::move()
     
     if (delta_y >= SPRITE_HEIGHT)
     {
-        actors.push_back(new yellowLines(LEFT_EDGE, new_border_y, this, racer));
-        actors.push_back(new yellowLines(RIGHT_EDGE, new_border_y, this, racer));
+        actors.push_back(new yellowLines(LEFT_EDGE, new_border_y, this));
+        actors.push_back(new yellowLines(RIGHT_EDGE, new_border_y, this));
     }
     if (delta_y >= (4.0 * SPRITE_HEIGHT))
     {
-        actors.push_back(new whiteLines(LEFT_EDGE + ROAD_WIDTH / 3.0, new_border_y, this, racer));
-        actors.push_back(new whiteLines(RIGHT_EDGE - ROAD_WIDTH / 3.0, new_border_y, this, racer));
+        actors.push_back(new whiteLines(LEFT_EDGE + ROAD_WIDTH / 3.0, new_border_y, this));
+        actors.push_back(new whiteLines(RIGHT_EDGE - ROAD_WIDTH / 3.0, new_border_y, this));
         lineTracker = actors.back()->getY();
     }
 
+    if (spawnRate(200, 30) == 0)
+        actors.push_back(new HumanPedestrian(randInt(0, VIEW_WIDTH), VIEW_HEIGHT, this));
+
+    if (spawnRate(100, 20) == 0)
+        actors.push_back(new ZombiePedestrian(randInt(0, VIEW_WIDTH), VIEW_HEIGHT, this));
+
+    if (spawnRate(100, 20) == 0)
+    {
+        int cur_lane = randInt(1,3);
+        actors.push_back(new ZombieCab(randInt(0, VIEW_WIDTH), VIEW_HEIGHT, this));
+    }
+
     return GWSTATUS_CONTINUE_GAME;
+}
+
+int StudentWorld::spawnRate(int a, int b)
+{
+    int i = max(a - level * 10, b);
+    int j = randInt(0, i - 1);
+    return j;
 }
 
 void StudentWorld::cleanUp()
