@@ -19,6 +19,7 @@ StudentWorld::StudentWorld(string assetPath)
     racer = nullptr;
     lineTracker = -1;
     level = 1;
+    numOfSoulsSaved = 0;
 }
 
 StudentWorld::~StudentWorld()
@@ -99,11 +100,22 @@ int StudentWorld::move()
     if (spawnRate(100, 20) == 0)
         actors.push_back(new ZombiePedestrian(randInt(0, VIEW_WIDTH), VIEW_HEIGHT, this));
 
-    if (spawnRate(100, 20) == 0)
+    if (spawnRate(150, 40) == 0)
+        actors.push_back(new OilSlick(randInt(LEFT_EDGE, RIGHT_EDGE), VIEW_HEIGHT, this));
+
+    int ChanceOfHolyWater = 100 + 10 * level;
+    if (randInt(0, ChanceOfHolyWater - 1) == 0)
+        actors.push_back(new HolyWaterGoodie(randInt(LEFT_EDGE, RIGHT_EDGE), VIEW_HEIGHT, this));
+    
+    int ChanceOfLostSoul = 100;
+    if (randInt(0, ChanceOfLostSoul - 1) == 0)
+        actors.push_back(new SoulGoodie(randInt(LEFT_EDGE, RIGHT_EDGE), VIEW_HEIGHT, this));
+
+    /*if (spawnRate(100, 20) == 0)
     {
         int cur_lane = randInt(1,3);
         actors.push_back(new ZombieCab(randInt(0, VIEW_WIDTH), VIEW_HEIGHT, this));
-    }
+    }*/
 
     return GWSTATUS_CONTINUE_GAME;
 }
@@ -113,6 +125,21 @@ int StudentWorld::spawnRate(int a, int b)
     int i = max(a - level * 10, b);
     int j = randInt(0, i - 1);
     return j;
+}
+
+void StudentWorld::recordSoulSaved()
+{
+    numOfSoulsSaved++;
+}
+
+bool StudentWorld::sprayFirstAppropriateActor(actor* a)
+{
+    return true;
+}
+
+bool StudentWorld::overlaps(const actor* a1, const actor* a2) const
+{
+    return true;
 }
 
 void StudentWorld::cleanUp()
