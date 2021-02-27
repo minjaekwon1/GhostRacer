@@ -12,15 +12,23 @@ class StudentWorld : public GameWorld
 {
 public:
     StudentWorld(std::string assetPath);
-    ~StudentWorld();
+    virtual ~StudentWorld();
+    
     virtual int init();
     virtual int move();
     virtual void cleanUp();
+
+    // return a pointer to world's Ghost Racer
+    ghostRacer* getGhostRacer();
+
+    //determines if actor will be generated
+    int spawnRate(int a, int b);
 
 private:
     ghostRacer* racer;
     std::vector <actor*> actors;
     int lineTracker;
+    int level;
 };
 
 #endif // STUDENTWORLD_H_
