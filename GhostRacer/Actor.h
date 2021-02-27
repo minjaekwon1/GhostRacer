@@ -43,8 +43,10 @@ public:
     // Increase hit points by hp.
     void setHP(int hp);
 
+    // Get movement plan.
     int getPlan() const;
 
+    // Set value of the movement plan.
     void setPlan(int plan);
 
     // Do what the spec says happens when hp units of damage is inflicted.
@@ -64,6 +66,12 @@ public:
     virtual void doSomething();
     virtual void movement();
 
+    int getScore();
+    void setScore(int score);
+
+    int getHolyWaterCharges();
+    void setHolyWaterCharges(int charges);
+
     // How many holy water projectiles does the object have?
     //int getNumSprays() const;
 
@@ -74,7 +82,8 @@ public:
     //void spin();
 
 private:
-    int m_spray;
+    int m_charges;
+    int m_score;
 };
 
 
@@ -121,6 +130,8 @@ class Spray : public actor
 public:
     Spray(double x, double y, int dir,StudentWorld* world);
     virtual void doSomething();
+private:
+    int m_traveled_distance;
 };
 
 class ghostRacerActivatedObject : public actor
