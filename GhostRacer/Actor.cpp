@@ -121,7 +121,7 @@ void agent::setPlan(int plan)
 bool agent::takeDamageAndPossiblyDie(int hp)
 {
 	setHP(hp);
-	if (getHP() <= 0 || hp == 0)  // 0 signifies an instant death
+	if (getHP() <= 0)  
 	{
 		setLivingStatus(false);
 		return true;
@@ -129,11 +129,15 @@ bool agent::takeDamageAndPossiblyDie(int hp)
 	return false;
 }
 
+//////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////// GHOST RACER IMPLEMENTATION ///////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////
 
 ghostRacer::ghostRacer(StudentWorld* world)
 	: agent(IID_GHOST_RACER, 128, 32, 90, 4.0, 100, world)
 {
-	m_spray = 10;
+	m_charges = 10;
+	m_score = 0;
 }
 
 void ghostRacer::doSomething()
@@ -202,6 +206,26 @@ void ghostRacer::movement()
 	moveTo(cur_x + delta_x, cur_y);
 }
 
+int ghostRacer::getScore()
+{
+	return m_score;
+}
+
+void ghostRacer::setScore(int score)
+{
+	m_score += score;
+}
+
+int ghostRacer::getHolyWaterCharges()
+{
+	return m_charges;
+}
+
+void ghostRacer::setHolyWaterCharges(int charges)
+{
+	m_charges += charges;
+}
+
 Pedestrian::Pedestrian(int imageID, double x, double y, double size, StudentWorld* world)
 	:agent(imageID, x, y, 0, size, 2, world)
 {
@@ -220,6 +244,10 @@ void Pedestrian::moveAndPossiblyPickPlan()
 			setDirection(0);
 }
 
+//////////////////////////////////////////////////////////////////////////////////////
+///////////////////////// HUMAN PEDESTRIAN IMPLEMENTATION ////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////
+
 HumanPedestrian::HumanPedestrian(double x, double y, StudentWorld* world)
 	:Pedestrian(IID_HUMAN_PED, x, y, 2.0, world) {}
 
@@ -230,7 +258,7 @@ void HumanPedestrian::doSomething()
 		if (checkCollision(getWorld()->getGhostRacer()))
 		{
 			takeDamageAndPossiblyDie(-2);
-			getWorld()->getGhostRacer()->takeDamageAndPossiblyDie(0);       // checks to see if the racer is overlapping the pedestrian and ends level if so
+			getWorld()->getGhostRacer()->takeDamageAndPossiblyDie(-100);       // checks to see if the racer is overlapping the pedestrian and ends level if so
 			getWorld()->playSound(SOUND_PLAYER_DIE);
 			return;
 		}
@@ -250,6 +278,10 @@ void HumanPedestrian::doSomething()
 
 	// add "What Human Pedestrian Must Do In Other Circumstances" pg 35
 }
+
+//////////////////////////////////////////////////////////////////////////////////////
+///////////////////////// ZOMBIE PEDESTRIAN IMPLEMENTATION ///////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////
 
 ZombiePedestrian::ZombiePedestrian(double x, double y, StudentWorld* world)
 	:Pedestrian(IID_ZOMBIE_PED, x, y, 3.0, world) {}
@@ -286,6 +318,10 @@ void ZombiePedestrian::doSomething()
 	else
 		return;
 }
+
+///////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////// ZOMBIE CAB IMPLEMENTATION ////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////
 
 ZombieCab::ZombieCab(double x, double y, StudentWorld* world)
 	:agent(IID_ZOMBIE_CAB, x, y, 90, 4.0, 3, world) 
@@ -349,15 +385,30 @@ void ZombieCab::doSomething()
 		return;
 }
 
+///////////////////////////////////////////////////////////////////////////////////////
+////////////////////////// SPRAY PROJECTILE IMPLEMENTATION ////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////
+
 Spray::Spray(double x, double y, int dir, StudentWorld* world)
-	:actor(IID_HOLY_WATER_PROJECTILE, x, y, dir, 1.0, 1, world)
+	:actor(IID_HOLY_WATER_PROJECTILE, x, y, dir, 1.0, 1, world)    // max travel distance of 160 pixels
 {
 	setCollisionAvoidanceWorthy(false);
 }
 
 void Spray::doSomething()
 {
+	if (!getLivingStatus())
+	{
+		moveForward(SPRITE_HEIGHT);
+		if (checkOutOfBounds)
+			return;
 
+		m_traveled_distance += SPRITE_HEIGHT;
+		if (m_traveled_distance == 160)
+			setLivingStatus(false);
+	}
+	else
+		return;
 }
 
 ghostRacerActivatedObject::ghostRacerActivatedObject(int imageID, double x, double y, int dir, double size, StudentWorld* world)
@@ -391,6 +442,10 @@ bool ghostRacerActivatedObject::isSprayable() const
 	return true;
 }
 
+///////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////// OIL SLICK IMPLEMENTATION ////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////
+
 OilSlick::OilSlick(double x, double y, StudentWorld* world)
 	:ghostRacerActivatedObject(IID_OIL_SLICK, x, y, 0, randInt(2,5), world)
 {
@@ -407,13 +462,22 @@ void OilSlick::doSomething()
 	if (checkCollision(getWorld()->getGhostRacer()))
 	{
 		getWorld()->playSound(SOUND_OIL_SLICK);
-		//tell to spin gr
+		doActivity(getWorld()->getGhostRacer());
 	}
 }
 
 void OilSlick::doActivity(ghostRacer* gr)
 {
+	int rand = randInt(0, 1);
+	if (rand == 0)
+		gr->setDirection(gr->getDirection() - randInt(5, 20));     // 50% of decreasing the direction
+	else
+		gr->setDirection(gr->getDirection() + randInt(5, 20));     // 50% of increasing the direction
 
+	if (gr->getDirection() < 60)     // makes sure direction does not go below 60
+		gr->setDirection(60);
+	if (gr->getDirection() > 120)    // makes sure direction is not above 120
+		gr->setDirection(120);
 }
 
 int OilSlick::getScoreIncrease() const
@@ -423,15 +487,17 @@ int OilSlick::getScoreIncrease() const
 
 bool OilSlick::selfDestructs() const
 {
-	return true;
+	return false;
 }
 
 bool OilSlick::isSprayable() const
 {
-	return true;
+	return false;
 }
 
-//healing
+///////////////////////////////////////////////////////////////////////////////////////
+////////////////////////// HEALING GOODIE IMPLEMENTATION //////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////
 
 HealingGoodie::HealingGoodie(double x, double y, StudentWorld* world)
 	:ghostRacerActivatedObject(IID_HEAL_GOODIE, x, y, 0, 1.0, world)
@@ -442,12 +508,24 @@ HealingGoodie::HealingGoodie(double x, double y, StudentWorld* world)
 
 void HealingGoodie::doSomething()
 {
+	movement();
+	if (checkOutOfBounds())
+		return;
 
+	if (checkCollision(getWorld()->getGhostRacer()))
+	{
+		doActivity(getWorld()->getGhostRacer());
+	}
+
+	//do holy water interaction
 }
 
 void HealingGoodie::doActivity(ghostRacer* gr)
 {
-
+	gr->setHP(gr->getHP() + 10);   // heal car for 10 points
+	setLivingStatus(false);			
+	getWorld()->playSound(SOUND_GOT_GOODIE);
+	gr->setScore(gr->getScore() + 250);			// increase score by 250 points
 }
 
 int HealingGoodie::getScoreIncrease() const
@@ -465,7 +543,9 @@ bool HealingGoodie::isSprayable() const
 	return true;
 }
 
-//holy water
+///////////////////////////////////////////////////////////////////////////////////////
+//////////////////////// HOLY WATER GOODIE IMPLEMENTATION /////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////
 
 HolyWaterGoodie::HolyWaterGoodie(double x, double y, StudentWorld* world)
 	:ghostRacerActivatedObject(IID_HOLY_WATER_GOODIE, x, y, 90, 2.0, world)
@@ -476,12 +556,24 @@ HolyWaterGoodie::HolyWaterGoodie(double x, double y, StudentWorld* world)
 
 void HolyWaterGoodie::doSomething()
 {
+	movement();
+	if (checkOutOfBounds())
+		return;
 
+	if (checkCollision(getWorld()->getGhostRacer()))
+	{
+		doActivity(getWorld()->getGhostRacer());
+	}
+
+	// projectile interaction part
 }
 
 void HolyWaterGoodie::doActivity(ghostRacer* gr)
 {
-
+	gr->setHolyWaterCharges(gr->getHolyWaterCharges() + 10);   // increase holy water charges by 10
+	setLivingStatus(false);
+	getWorld()->playSound(SOUND_GOT_GOODIE);
+	gr->setScore(gr->getScore() + 50);			// increase score by 50 points
 }
 
 int HolyWaterGoodie::getScoreIncrease() const
@@ -499,7 +591,9 @@ bool HolyWaterGoodie::isSprayable() const
 	return true;
 }
 
-//souls
+///////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////// SOULS IMPLEMENTATION //////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////
 
 SoulGoodie::SoulGoodie(double x, double y, StudentWorld* world)
 	:ghostRacerActivatedObject(IID_SOUL_GOODIE, x, y, 0, 4.0, world)
@@ -510,12 +604,27 @@ SoulGoodie::SoulGoodie(double x, double y, StudentWorld* world)
 
 void SoulGoodie::doSomething()
 {
+	movement();
+	if (checkOutOfBounds())
+		return;
 
+	if (checkCollision(getWorld()->getGhostRacer()))
+	{
+		doActivity(getWorld()->getGhostRacer());
+	}
+
+	if (getDirection() <= 360)
+		setDirection(getDirection() + 10);
+	else
+		setDirection(10);
 }
 
 void SoulGoodie::doActivity(ghostRacer* gr)
 {
-
+	getWorld()->recordSoulSaved();				 // increase number of souls saved by 1
+	setLivingStatus(false);
+	getWorld()->playSound(SOUND_GOT_SOUL);
+	gr->setScore(gr->getScore() + 100);			 // increase score by 100 points
 }
 
 int SoulGoodie::getScoreIncrease() const
@@ -533,9 +642,9 @@ bool SoulGoodie::isSprayable() const
 	return true;
 }
 
-//////////////////////////////////////////////////////////
-//////////////////DONE WITH BORDERS///////////////////////
-//////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////// BORDERS IMPLEMENTATION ///////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////
 
 borderLines::borderLines(int line_ID, double line_X, double line_Y, StudentWorld* world)
 	:actor(line_ID, line_X, line_Y, 0, 2.0, 2, world)
