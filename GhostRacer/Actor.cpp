@@ -96,6 +96,12 @@ bool actor::checkOutOfBounds()
 		return false;
 }
 
+
+bool actor::beSprayedIfAppropriate()
+{
+	return false;
+}
+
 agent::agent(int imageID, double x, double y, int dir, double size, int hp, StudentWorld* world)
 	: actor(imageID, x, y, dir, size, 0, world)
 {
@@ -293,6 +299,11 @@ void HumanPedestrian::doSomething()
 	// add "What Human Pedestrian Must Do In Other Circumstances" pg 35
 }
 
+bool HumanPedestrian::beSprayedIfAppropriate()
+{
+	return true;
+}
+
 //////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////// ZOMBIE PEDESTRIAN IMPLEMENTATION ///////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////
@@ -350,6 +361,11 @@ void ZombiePedestrian::doSomething()
 	}
 	else
 		return;
+}
+
+bool ZombiePedestrian::beSprayedIfAppropriate()
+{
+	return true;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////
@@ -418,6 +434,11 @@ void ZombieCab::doSomething()
 		return;
 }
 
+bool ZombieCab::beSprayedIfAppropriate()
+{
+	return true;
+}
+
 ///////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////// SPRAY PROJECTILE IMPLEMENTATION ////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////
@@ -433,6 +454,11 @@ void Spray::doSomething()
 {
 	if (getLivingStatus())
 	{
+		if (true)
+		{
+			return;
+		}
+		
 		moveForward(SPRITE_HEIGHT);
 		if (checkOutOfBounds())
 			return;
@@ -446,14 +472,15 @@ void Spray::doSomething()
 }
 
 ghostRacerActivatedObject::ghostRacerActivatedObject(int imageID, double x, double y, int dir, double size, StudentWorld* world)
-	:actor(imageID, x, y, dir, size, 2, world)
-{
-
-}
+	:actor(imageID, x, y, dir, size, 2, world) {}
 
 bool ghostRacerActivatedObject::beSprayedIfAppropriate()
 {
-	return true;
+	if (isSprayable())
+	{
+		return true;
+	}
+	return false;
 }
 
 void ghostRacerActivatedObject::doActivity(ghostRacer* gr)
@@ -461,17 +488,7 @@ void ghostRacerActivatedObject::doActivity(ghostRacer* gr)
 
 }
 
-int ghostRacerActivatedObject::getScoreIncrease() const
-{
-	return 1;
-}
-
 bool ghostRacerActivatedObject::selfDestructs() const
-{
-	return true;
-}
-
-bool ghostRacerActivatedObject::isSprayable() const
 {
 	return true;
 }
@@ -512,11 +529,6 @@ void OilSlick::doActivity(ghostRacer* gr)
 		gr->setDirection(60);
 	if (gr->getDirection() > 120)    // makes sure direction is not above 120
 		gr->setDirection(120);
-}
-
-int OilSlick::getScoreIncrease() const
-{
-	return 1;
 }
 
 bool OilSlick::selfDestructs() const
@@ -564,11 +576,6 @@ void HealingGoodie::doActivity(ghostRacer* gr)
 	getWorld()->increaseScore(250);			// increase score by 250 points
 }
 
-int HealingGoodie::getScoreIncrease() const
-{
-	return 1;
-}
-
 bool HealingGoodie::selfDestructs() const
 {
 	return true;
@@ -610,11 +617,6 @@ void HolyWaterGoodie::doActivity(ghostRacer* gr)
 	setLivingStatus(false);
 	getWorld()->playSound(SOUND_GOT_GOODIE);
 	getWorld()->increaseScore(50);			// increase score by 50 points
-}
-
-int HolyWaterGoodie::getScoreIncrease() const
-{
-	return 1;
 }
 
 bool HolyWaterGoodie::selfDestructs() const
@@ -663,19 +665,14 @@ void SoulGoodie::doActivity(ghostRacer* gr)
 	getWorld()->increaseScore(100);			 // increase score by 100 points
 }
 
-int SoulGoodie::getScoreIncrease() const
-{
-	return 1;
-}
-
 bool SoulGoodie::selfDestructs() const
 {
-	return true;
+	return false;
 }
 
 bool SoulGoodie::isSprayable() const
 {
-	return true;
+	return false;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////
