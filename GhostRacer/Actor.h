@@ -25,6 +25,10 @@ public:
     bool checkCollision(actor* Actor);
     bool checkOutOfBounds();
 
+    // If this actor is affected by holy water projectiles, then inflict that
+    // affect on it and return true; otherwise, return false.
+    virtual bool beSprayedIfAppropriate();
+
 private:
 	bool if_alive;
 	bool has_collision;
@@ -99,7 +103,7 @@ class HumanPedestrian : public Pedestrian
 public:
     HumanPedestrian(double x, double y, StudentWorld* world);
     virtual void doSomething();
-    //virtual bool beSprayedIfAppropriate();
+    virtual bool beSprayedIfAppropriate();
     //virtual bool takeDamageAndPossiblyDie(int hp);
 };
 
@@ -108,7 +112,7 @@ class ZombiePedestrian : public Pedestrian
 public:
     ZombiePedestrian(double x, double y, StudentWorld* world);
     virtual void doSomething();
-    //virtual bool beSprayedIfAppropriate();
+    virtual bool beSprayedIfAppropriate();
     //virtual bool takeDamageAndPossiblyDie(int hp);
 private:
     int grunt;
@@ -119,7 +123,7 @@ class ZombieCab : public agent
 public:
     ZombieCab(double x, double y, StudentWorld* world);
     virtual void doSomething();
-    //virtual bool beSprayedIfAppropriate();
+    virtual bool beSprayedIfAppropriate();
 private:
     bool ifDamaged;
 };
@@ -142,9 +146,6 @@ public:
     // Do the object's special activity (increase health, spin Ghostracer, etc.)
     virtual void doActivity(ghostRacer* gr) = 0;
 
-    // Return the object's increase to the score when activated.
-    virtual int getScoreIncrease() const = 0;
-
     // Return whether the object dies after activation.
     virtual bool selfDestructs() const = 0;
 
@@ -158,7 +159,6 @@ public:
     OilSlick(double x, double y, StudentWorld* world);
     virtual void doSomething();
     virtual void doActivity(ghostRacer* gr);
-    virtual int getScoreIncrease() const;
     virtual bool selfDestructs() const;
     virtual bool isSprayable() const;
 };
@@ -169,7 +169,6 @@ public:
     HealingGoodie(double x, double y, StudentWorld* world);
     virtual void doSomething();
     virtual void doActivity(ghostRacer* gr);
-    virtual int getScoreIncrease() const;
     virtual bool selfDestructs() const;
     virtual bool isSprayable() const;
 };
@@ -180,7 +179,6 @@ public:
     HolyWaterGoodie(double x, double y, StudentWorld* world);
     virtual void doSomething();
     virtual void doActivity(ghostRacer* gr);
-    virtual int getScoreIncrease() const;
     virtual bool selfDestructs() const;
     virtual bool isSprayable() const;
 };
@@ -191,7 +189,6 @@ public:
     SoulGoodie(double x, double y, StudentWorld* world);
     virtual void doSomething();
     virtual void doActivity(ghostRacer* gr);
-    virtual int getScoreIncrease() const;
     virtual bool selfDestructs() const;
     virtual bool isSprayable() const;
 };
