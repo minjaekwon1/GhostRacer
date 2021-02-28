@@ -130,18 +130,47 @@ int StudentWorld::move()
     {
         for (int i = 0; i < 3; i++)
         {
-            actor* ptr = closestCollisionWorthy(actors, racer, cur_lane);
-            if (ptr == nullptr || (ptr->getY() > VIEW_HEIGHT / 3))
+            actor* ptr_1 = closestBottomCollisionWorthy(actors, cur_lane);
+            actor* ptr_2 = closestTopCollisionWorthy(actors, cur_lane);
+
+            if (ptr_1 == nullptr || (ptr_1->getY() > VIEW_HEIGHT / 3))
             {
-                actors.push_back(new ZombieCab(curLaneConversion(cur_lane), SPRITE_HEIGHT / 2, this));
+                if (cur_lane == 1 && (racer->getX() >= LEFT_INNER_EDGE))
+                {
+                    actors.push_back(new ZombieCab(curLaneConversion(cur_lane), SPRITE_HEIGHT / 2, this));
+                    vector <actor*> ::reverse_iterator it = actors.rbegin();
+                    (*it)->setVSpeed(racer->getVSpeed() + randInt(2, 4));
+                    break;
+                }
+                else if (cur_lane == 2 && (racer->getX() <= LEFT_INNER_EDGE) && (racer->getX() >= RIGHT_INNER_EDGE))
+                {
+                    actors.push_back(new ZombieCab(curLaneConversion(cur_lane), SPRITE_HEIGHT / 2, this));
+                    vector <actor*> ::reverse_iterator it = actors.rbegin();
+                    (*it)->setVSpeed(racer->getVSpeed() + randInt(2, 4));
+                    break;
+                }
+                else if (cur_lane == 3 && (racer->getX() <= RIGHT_INNER_EDGE))
+                {
+                    actors.push_back(new ZombieCab(curLaneConversion(cur_lane), SPRITE_HEIGHT / 2, this));
+                    vector <actor*> ::reverse_iterator it = actors.rbegin();
+                    (*it)->setVSpeed(racer->getVSpeed() + randInt(2, 4));
+                    break;
+                }
+
+            }
+            else if (ptr_2 == nullptr || (ptr_2->getY() < VIEW_HEIGHT * 2 / 3))
+            {
+                actors.push_back(new ZombieCab(curLaneConversion(cur_lane), VIEW_HEIGHT - SPRITE_HEIGHT / 2, this));
                 vector <actor*> ::reverse_iterator it = actors.rbegin();
-                (*it)->setVSpeed(racer->getVSpeed() + randInt(2, 4));
+                (*it)->setVSpeed(racer->getVSpeed() - randInt(2, 4));
                 break;
             }
             else
+            {
                 cur_lane++;
-            if (cur_lane == 4)
-                cur_lane = 1;
+                if (cur_lane == 4)
+                    cur_lane = 1;
+            }
         }
         
     }
@@ -164,55 +193,16 @@ void StudentWorld::recordSoulSaved()
     numOfSoulsNeeded--;
 }
 
-actor* StudentWorld::closestCollisionWorthy(std::vector <actor*> const& a, actor* racer, int i)
+actor* StudentWorld::closestBottomCollisionWorthy(std::vector <actor*> const& a, int i)
 {
     int LEFT_EDGE = ROAD_CENTER - ROAD_WIDTH / 2;
     int LEFT_INNER_EDGE = ROAD_CENTER - ROAD_WIDTH / 6;
     int RIGHT_EDGE = ROAD_CENTER + ROAD_WIDTH / 2;
     int RIGHT_INNER_EDGE = ROAD_CENTER + ROAD_WIDTH / 6;
 
-    vector <actor*> ::iterator closest_1;
-    vector <actor*> ::iterator closest_2;
-    vector <actor*> ::iterator closest_3;
-    if (i == 1)
-    {
-        for (vector <actor*> ::iterator it = actors.begin(); it != actors.end(); it++)
-        {
-            if ((*it)->getX() >= LEFT_EDGE && (*it)->getX() <= LEFT_INNER_EDGE && (*it)->checkCollisionAvoidanceWorthy())
-            {
-                closest_1 = it;
-                break;
-            }
-            else
-                closest_1 = actors.end();
-        }
-    }
-    if (i == 2)
-    {
-        for (vector <actor*> ::iterator it = actors.begin(); it != actors.end(); it++)
-        {
-            if ((*it)->getX() >= LEFT_INNER_EDGE && (*it)->getX() <= RIGHT_INNER_EDGE && (*it)->checkCollisionAvoidanceWorthy())
-            {
-                closest_2 = it;
-                break;
-            }
-            else
-                closest_2 = actors.end();
-        }
-    }
-    if (i == 3)
-    {
-        for (vector <actor*> ::iterator it = actors.begin(); it != actors.end(); it++)
-        {
-            if ((*it)->getX() >= RIGHT_INNER_EDGE && (*it)->getX() <= RIGHT_EDGE && (*it)->checkCollisionAvoidanceWorthy())
-            {
-                closest_3 = it;
-                break;
-            }
-            else
-                closest_3 = actors.end();
-        }
-    }
+    vector <actor*> ::iterator closest_1 = actors.end();
+    vector <actor*> ::iterator closest_2 = actors.end();
+    vector <actor*> ::iterator closest_3 = actors.end();
 
     for (vector <actor*> ::iterator it = actors.begin(); it != actors.end(); it++)
     {
@@ -220,6 +210,8 @@ actor* StudentWorld::closestCollisionWorthy(std::vector <actor*> const& a, actor
         {
             if ((*it)->getX() >= LEFT_EDGE && (*it)->getX() <= LEFT_INNER_EDGE && (*it)->checkCollisionAvoidanceWorthy())
             {
+                if (closest_1 == actors.end())
+                    closest_1 = it;
                 if (closest_1 != actors.end() && (*it)->getY() < (*closest_1)->getY())
                     closest_1 = it;
             }
@@ -228,6 +220,8 @@ actor* StudentWorld::closestCollisionWorthy(std::vector <actor*> const& a, actor
         {
             if ((*it)->getX() >= LEFT_INNER_EDGE && (*it)->getX() <= RIGHT_INNER_EDGE && (*it)->checkCollisionAvoidanceWorthy())
             {
+                if (closest_2 == actors.end())
+                    closest_2 = it;
                 if (closest_2 != actors.end() && (*it)->getY() < (*closest_2)->getY())
                     closest_2 = it;
             }
@@ -236,34 +230,91 @@ actor* StudentWorld::closestCollisionWorthy(std::vector <actor*> const& a, actor
         {
             if ((*it)->getX() >= RIGHT_INNER_EDGE && (*it)->getX() <= RIGHT_EDGE && (*it)->checkCollisionAvoidanceWorthy())
             {
+                if (closest_3 == actors.end())
+                    closest_3 = it;
                 if (closest_3 != actors.end() && (*it)->getY() < (*closest_3)->getY())
                     closest_3 = it;
             }
         }
     }
 
-
-    if (i == 1 && (racer->getX() >= LEFT_EDGE) && (racer->getX() <= LEFT_INNER_EDGE))
-        return racer;
-    else if (i == 1 && closest_1 != actors.end())
+    if (i == 1 && closest_1 != actors.end())
         return *closest_1;
     else
         return nullptr;
 
-    if (i == 2 && (racer->getX() >= LEFT_INNER_EDGE) && (racer->getX() <= RIGHT_INNER_EDGE))
-        return racer;
-    else if (i == 2 && (closest_2 != actors.end()))
+    if (i == 2 && (closest_2 != actors.end()))
         return *closest_2;
     else
         return nullptr;
 
-    if (i == 3 && (racer->getX() >= RIGHT_INNER_EDGE) && (racer->getX() <= RIGHT_EDGE))
-        return racer;
-    else if (i == 3 && closest_3 != actors.end())
+    if (i == 3 && closest_3 != actors.end())
         return *closest_3;
     else
         return nullptr;
    
+}
+
+actor* StudentWorld::closestTopCollisionWorthy(std::vector <actor*> const& a, int i)
+{
+    int LEFT_EDGE = ROAD_CENTER - ROAD_WIDTH / 2;
+    int LEFT_INNER_EDGE = ROAD_CENTER - ROAD_WIDTH / 6;
+    int RIGHT_EDGE = ROAD_CENTER + ROAD_WIDTH / 2;
+    int RIGHT_INNER_EDGE = ROAD_CENTER + ROAD_WIDTH / 6;
+
+    vector <actor*> ::iterator farthest_1 = actors.end();
+    vector <actor*> ::iterator farthest_2 = actors.end();
+    vector <actor*> ::iterator farthest_3 = actors.end();
+
+    for (vector <actor*> ::iterator it = actors.begin(); it != actors.end(); it++)
+    {
+        if (i == 1)
+        {
+            if ((*it)->getX() >= LEFT_EDGE && (*it)->getX() <= LEFT_INNER_EDGE && (*it)->checkCollisionAvoidanceWorthy())
+            {
+                if (farthest_1 == actors.end())
+                    farthest_1 = it;
+                if (farthest_1 != actors.end() && (*it)->getY() > (*farthest_1)->getY())
+                    farthest_1 = it;
+            }
+        }
+        if (i == 2)
+        {
+            if ((*it)->getX() >= LEFT_INNER_EDGE && (*it)->getX() <= RIGHT_INNER_EDGE && (*it)->checkCollisionAvoidanceWorthy())
+            {
+                if (farthest_2 == actors.end())
+                    farthest_2 = it;
+                if (farthest_2 != actors.end() && (*it)->getY() < (*farthest_2)->getY())
+                    farthest_2 = it;
+            }
+        }
+        if (i == 3)
+        {
+            if ((*it)->getX() >= RIGHT_INNER_EDGE && (*it)->getX() <= RIGHT_EDGE && (*it)->checkCollisionAvoidanceWorthy())
+            {
+                if (farthest_3 == actors.end())
+                    farthest_3 = it;
+                if (farthest_3 != actors.end() && (*it)->getY() < (*farthest_3)->getY())
+                    farthest_3 = it;
+            }
+        }
+    }
+
+    if (i == 1 && farthest_1 != actors.end())
+        return *farthest_1;
+    else
+        return nullptr;
+
+    if (i == 2 && (farthest_2 != actors.end()))
+        return *farthest_2;
+    else
+        return nullptr;
+
+    if (i == 3 && farthest_3 != actors.end())
+        return *farthest_3;
+    else
+        return nullptr;
+
 }
 
 int StudentWorld::curLaneConversion(int cur_lane)
@@ -278,12 +329,13 @@ int StudentWorld::curLaneConversion(int cur_lane)
 
 bool StudentWorld::sprayFirstAppropriateActor(actor* a)
 {
-    return true;
-}
+    for (vector <actor*> ::iterator it = actors.begin(); it != actors.end(); it++)
+    {
+        if (a->checkCollision(*it) && (*it)->checkCollisionAvoidanceWorthy())
+        {
 
-bool StudentWorld::overlaps(const actor* a1, const actor* a2) const
-{
-
+        }
+    }
     return true;
 }
 
