@@ -13,6 +13,7 @@ public:
 	actor(int m_ID, double m_X, double m_Y, int m_dir, double m_size, int m_depth, StudentWorld* world);
     bool getLivingStatus();
 	void setLivingStatus(bool trueIfAlive);
+    bool checkCollisionAvoidanceWorthy();
     void setCollisionAvoidanceWorthy(bool trueIfAvoid);
 	StudentWorld* getWorld();
 	virtual void doSomething() = 0;
@@ -66,9 +67,6 @@ public:
     virtual void doSomething();
     virtual void movement();
 
-    int getScore();
-    void setScore(int score);
-
     int getHolyWaterCharges();
     void setHolyWaterCharges(int charges);
 
@@ -83,7 +81,6 @@ public:
 
 private:
     int m_charges;
-    int m_score;
 };
 
 
@@ -113,6 +110,8 @@ public:
     virtual void doSomething();
     //virtual bool beSprayedIfAppropriate();
     //virtual bool takeDamageAndPossiblyDie(int hp);
+private:
+    int grunt;
 };
 
 class ZombieCab : public agent
