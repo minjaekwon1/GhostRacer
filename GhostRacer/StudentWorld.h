@@ -17,6 +17,7 @@ public:
     virtual int init();
     virtual int move();
     virtual void cleanUp();
+    std::string text();
 
     // return a pointer to world's Ghost Racer
     ghostRacer* getGhostRacer();
@@ -27,6 +28,10 @@ public:
     // Record that a soul was saved.
     void recordSoulSaved();
 
+    actor* closestCollisionWorthy(std::vector <actor*> const &a, actor* racer, int i);
+
+    int curLaneConversion(int cur_lane);
+
     // If actor a overlaps some live actor that is affected by a holy water
     // projectile, inflict a holy water spray on that actor and return true;
     // otherwise, return false.  (See Actor::beSprayedIfAppropriate.)
@@ -35,12 +40,14 @@ public:
     // Return true if actor a1 overlaps actor a2, otherwise false.
     bool overlaps(const actor* a1, const actor* a2) const;
 
+    void addSpray(int x, int y, int dir);
+
 private:
     ghostRacer* racer;
     std::vector <actor*> actors;
     int lineTracker;
-    int level;
-    int numOfSoulsSaved;
+    int numOfSoulsNeeded;
+    int bonusPoints;
 };
 
 #endif // STUDENTWORLD_H_
