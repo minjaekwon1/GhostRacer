@@ -28,7 +28,9 @@ public:
     // Record that a soul was saved.
     void recordSoulSaved();
 
-    actor* closestCollisionWorthy(std::vector <actor*> const &a, actor* racer, int i);
+    actor* closestBottomCollisionWorthy(std::vector <actor*> const &a, int i);
+
+    actor* closestTopCollisionWorthy(std::vector <actor*> const& a, int i);
 
     int curLaneConversion(int cur_lane);
 
@@ -36,9 +38,6 @@ public:
     // projectile, inflict a holy water spray on that actor and return true;
     // otherwise, return false.  (See Actor::beSprayedIfAppropriate.)
     bool sprayFirstAppropriateActor(actor* a);
-
-    // Return true if actor a1 overlaps actor a2, otherwise false.
-    bool overlaps(const actor* a1, const actor* a2) const;
 
     void addSpray(int x, int y, int dir);
 
