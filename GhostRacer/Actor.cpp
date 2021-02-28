@@ -26,6 +26,11 @@ void actor::setLivingStatus(bool trueIfAlive)
 		if_alive = false;
 }
 
+bool actor::checkCollisionAvoidanceWorthy()
+{
+	return has_collision;
+}
+
 void actor::setCollisionAvoidanceWorthy(bool trueIfAvoid)
 {
 	if (trueIfAvoid)
@@ -137,7 +142,6 @@ ghostRacer::ghostRacer(StudentWorld* world)
 	: agent(IID_GHOST_RACER, 128, 32, 90, 4.0, 100, world)
 {
 	m_charges = 10;
-	m_score = 0;
 }
 
 void ghostRacer::doSomething()
@@ -185,6 +189,26 @@ void ghostRacer::doSomething()
 					setVSpeed(getVSpeed() - 1);
 				break;
 			case KEY_PRESS_SPACE:
+				if (m_charges >= 1)
+				{
+					int dir = getDirection();
+					int delta_x, delta_y;
+					if (dir < 90)
+					{
+						int i = 90 - dir;
+						delta_x = getX() + SPRITE_HEIGHT * sin(i * M_PI / 180.0);
+						delta_y = getY() + SPRITE_HEIGHT * cos(i * M_PI / 180.0);
+					}
+					else
+					{
+						int i = dir - 90;
+						delta_x = getX() - SPRITE_HEIGHT * sin(i * M_PI / 180.0);
+						delta_y = getY() + SPRITE_HEIGHT * cos(i * M_PI / 180.0);
+					}
+					getWorld()->addSpray(delta_x, delta_y, dir);
+					getWorld()->playSound(SOUND_PLAYER_SPRAY);
+					m_charges--;
+				}
 				break;
 			default:
 				break;
@@ -204,16 +228,6 @@ void ghostRacer::movement()
 	double cur_x = getX();
 	double cur_y = getY();
 	moveTo(cur_x + delta_x, cur_y);
-}
-
-int ghostRacer::getScore()
-{
-	return m_score;
-}
-
-void ghostRacer::setScore(int score)
-{
-	m_score += score;
 }
 
 int ghostRacer::getHolyWaterCharges()
@@ -284,7 +298,7 @@ void HumanPedestrian::doSomething()
 //////////////////////////////////////////////////////////////////////////////////////
 
 ZombiePedestrian::ZombiePedestrian(double x, double y, StudentWorld* world)
-	:Pedestrian(IID_ZOMBIE_PED, x, y, 3.0, world) {}
+	:Pedestrian(IID_ZOMBIE_PED, x, y, 3.0, world), grunt(0) {}
 
 void ZombiePedestrian::doSomething()
 {
@@ -298,6 +312,25 @@ void ZombiePedestrian::doSomething()
 			{
 				getWorld()->playSound(SOUND_PLAYER_DIE);
 				return;
+			}
+		}
+
+		double delta_x = abs(getX() - getWorld()->getGhostRacer()->getX());
+		if (delta_x <= 30)
+		{
+			setDirection(270);
+			if ((getX() - getWorld()->getGhostRacer()->getX()) < 0)
+				setHSpeed(1);
+			else if ((getX() - getWorld()->getGhostRacer()->getX()) > 0)
+				setHSpeed(-1);
+			else
+				setHSpeed(0);
+
+			grunt--;
+			if (grunt <= 0)
+			{
+				getWorld()->playSound(SOUND_ZOMBIE_ATTACK);
+				grunt = 20;
 			}
 		}
 
@@ -355,31 +388,31 @@ void ZombieCab::doSomething()
 				}
 				ifDamaged = true;
 			}
+		}
 
-			movement();
-			if (checkOutOfBounds())                     // checks if cab is out of bounds
-				return;
+		movement();
+		if (checkOutOfBounds())                     // checks if cab is out of bounds
+			return;
 
-			if (getVSpeed() > getWorld()->getGhostRacer()->getVSpeed())
-			{
+		if (getVSpeed() > getWorld()->getGhostRacer()->getVSpeed())
+		{
 
-			}
-			else
-			{
+		}
+		else
+		{
 
-			}
+		}
 
-			setPlan(-1);
-			if (getPlan() <= 0)
-			{
-				setPlan(randInt(4, 32));
-				setVSpeed(getVSpeed() + randInt(-2, 2));
-			}
-			else
-				return;
+		setPlan(-1);
+		if (getPlan() <= 0)
+		{
+			setPlan(randInt(4, 32));
+			setVSpeed(getVSpeed() + randInt(-2, 2));
+		}
+		else
+			return;
 
 			//implement pg 40
-		}
 	}
 	else
 		return;
@@ -393,18 +426,19 @@ Spray::Spray(double x, double y, int dir, StudentWorld* world)
 	:actor(IID_HOLY_WATER_PROJECTILE, x, y, dir, 1.0, 1, world)    // max travel distance of 160 pixels
 {
 	setCollisionAvoidanceWorthy(false);
+	m_traveled_distance = 160;
 }
 
 void Spray::doSomething()
 {
-	if (!getLivingStatus())
+	if (getLivingStatus())
 	{
 		moveForward(SPRITE_HEIGHT);
-		if (checkOutOfBounds)
+		if (checkOutOfBounds())
 			return;
 
-		m_traveled_distance += SPRITE_HEIGHT;
-		if (m_traveled_distance == 160)
+		m_traveled_distance -= SPRITE_HEIGHT;
+		if (m_traveled_distance == 0)
 			setLivingStatus(false);
 	}
 	else
@@ -522,10 +556,12 @@ void HealingGoodie::doSomething()
 
 void HealingGoodie::doActivity(ghostRacer* gr)
 {
-	gr->setHP(gr->getHP() + 10);   // heal car for 10 points
+	gr->setHP(gr->getHP() + 10);    // heal car for 10 points
+	if (gr->getHP() > 100)
+		gr->setHP(100);				
 	setLivingStatus(false);			
 	getWorld()->playSound(SOUND_GOT_GOODIE);
-	gr->setScore(gr->getScore() + 250);			// increase score by 250 points
+	getWorld()->increaseScore(250);			// increase score by 250 points
 }
 
 int HealingGoodie::getScoreIncrease() const
@@ -573,7 +609,7 @@ void HolyWaterGoodie::doActivity(ghostRacer* gr)
 	gr->setHolyWaterCharges(gr->getHolyWaterCharges() + 10);   // increase holy water charges by 10
 	setLivingStatus(false);
 	getWorld()->playSound(SOUND_GOT_GOODIE);
-	gr->setScore(gr->getScore() + 50);			// increase score by 50 points
+	getWorld()->increaseScore(50);			// increase score by 50 points
 }
 
 int HolyWaterGoodie::getScoreIncrease() const
@@ -624,7 +660,7 @@ void SoulGoodie::doActivity(ghostRacer* gr)
 	getWorld()->recordSoulSaved();				 // increase number of souls saved by 1
 	setLivingStatus(false);
 	getWorld()->playSound(SOUND_GOT_SOUL);
-	gr->setScore(gr->getScore() + 100);			 // increase score by 100 points
+	getWorld()->increaseScore(100);			 // increase score by 100 points
 }
 
 int SoulGoodie::getScoreIncrease() const
